@@ -1,6 +1,6 @@
-from sklearn.linear_model import ElasticNet
+from sklearn.linear_model import ElasticNet, LinearRegression, Lasso, Ridge
 
-x = [ [4, 8], [3, 6], [10, 2]]
+x = [ [4, 8], [3, 6], [10, 2], [20,20]]
 y = [20, 16, 26]
 
 model = ElasticNet()
