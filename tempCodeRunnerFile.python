@@ -1,0 +1,180 @@
+import numpy as np
+
+# --- Configurações do Jogo ---
+LINHAS = 6
+COLUNAS = 7
+PECA_JOGADOR = 1
+PECA_IA = 2  # Usaremos '2' para o segundo jogador (P2)
+SIMBOLO_JOGADOR = 'X'
+SIMBOLO_IA = 'O'
+SIMBOLO_VAZIO = '.'
+
+def criar_tabuleiro():
+    """Cria e retorna o tabuleiro 6x7 inicializado com zeros."""
+    return np.zeros((LINHAS, COLUNAS), dtype=int)
+
+def imprimir_tabuleiro(tabuleiro):
+    """Imprime o tabuleiro no console, de cabeça para cima e com símbolos."""
+    print("\n--- TABULEIRO ---")
+    
+    # Imprime os números das colunas
+    print(" ".join([str(c+1) for c in range(COLUNAS)]))
+    
+    # Inverte as linhas para imprimir de cima para baixo
+    tabuleiro_inverso = np.flip(tabuleiro, 0)
+    
+    for linha in tabuleiro_inverso:
+        linha_str = []
+        for celula in linha:
+            if celula == PECA_JOGADOR:
+                linha_str.append(SIMBOLO_JOGADOR)
+            elif celula == PECA_IA:
+                linha_str.append(SIMBOLO_IA)
+            else:
+                linha_str.append(SIMBOLO_VAZIO)
+        print(" ".join(linha_str))
+    print("-----------------\n")
+
+def coluna_valida(tabuleiro, coluna):
+    """Verifica se a coluna está dentro dos limites e não está cheia."""
+    return 0 <= coluna < COLUNAS and tabuleiro[LINHAS - 1][coluna] == 0
+
+def proxima_linha_aberta(tabuleiro, coluna):
+    """Retorna o índice da próxima linha vazia em uma coluna."""
+    for r in range(LINHAS):
+        if tabuleiro[r][coluna] == 0:
+            return r
+
+def soltar_peca(tabuleiro, linha, coluna, peca):
+    """Coloca a peça na posição especificada."""
+    tabuleiro[linha][coluna] = peca
+
+def checar_vitoria(tabuleiro, peca):
+    """Verifica se há 4 peças seguidas (horizontal, vertical ou diagonal)."""
+
+    # --- Checar horizontalmente ---
+    for c in range(COLUNAS - 3):
+        for r in range(LINHAS):
+            if all(tabuleiro[r][c + i] == peca for i in range(4)):
+                return True
+
+    # --- Checar verticalmente ---
+    for c in range(COLUNAS):
+        for r in range(LINHAS - 3):
+            if all(tabuleiro[r + i][c] == peca for i in range(4)):
+                return True
+
+    # --- Checar diagonalmente (positiva) ---
+    # Da esquerda para a direita, de baixo para cima
+    for c in range(COLUNAS - 3):
+        for r in range(LINHAS - 3):
+            if all(tabuleiro[r + i][c + i] == peca for i in range(4)):
+                return True
+
+    # --- Checar diagonalmente (negativa) ---
+    # Da esquerda para a direita, de cima para baixo
+    for c in range(COLUNAS - 3):
+        for r in range(3, LINHAS):
+            if all(tabuleiro[r - i][c + i] == peca for i in range(4)):
+                return True
+
+    return False
+
+def tabuleiro_cheio(tabuleiro):
+    """Verifica se o tabuleiro está cheio (empate)."""
+    return not any(tabuleiro[LINHAS - 1, c] == 0 for c in range(COLUNAS))
+
+def jogar():
+    """Função principal do jogo."""
+    tabuleiro = criar_tabuleiro()
+    jogo_ativo = True
+    turno = 0  # 0 para Jogador 1, 1 para Jogador 2
+
+    print("--- Bem-vindo ao Lig-4! ---")
+    imprimir_tabuleiro(tabuleiro)
+
+    while jogo_ativo:
+        if turno == 0:
+            # --- Turno do Jogador 1 ('X') ---
+            peca_atual = PECA_JOGADOR
+            simbolo_atual = SIMBOLO_JOGADOR
+            jogador_nome = "Jogador 1 (X)"
+            
+            while True:
+                try:
+                    # O usuário insere a coluna (1 a 7), convertemos para índice (0 a 6)
+                    col = int(input(f"{jogador_nome}, escolha uma coluna para jogar (1-{COLUNAS}): ")) - 1
+                    
+                    if coluna_valida(tabuleiro, col):
+                        linha = proxima_linha_aberta(tabuleiro, col)
+                        soltar_peca(tabuleiro, linha, col, peca_atual)
+                        break
+                    else:
+                        print("Coluna inválida ou cheia. Tente novamente.")
+                except ValueError:
+                    print("Entrada inválida. Digite um número de coluna.")
+                except IndexError:
+                    print(f"Número de coluna fora do intervalo (1-{COLUNAS}).")
+
+            # --- Checagem após a jogada ---
+            if checar_vitoria(tabuleiro, peca_atual):
+                imprimir_tabuleiro(tabuleiro)
+                print(f"🎉 **{jogador_nome} VENCEU!** 🎉")
+                jogo_ativo = False
+
+            elif tabuleiro_cheio(tabuleiro):
+                imprimir_tabuleiro(tabuleiro)
+                print("🤝 **O jogo terminou em EMPATE!** 🤝")
+                jogo_ativo = False
+                
+            else:
+                imprimir_tabuleiro(tabuleiro)
+                turno = 1 # Passa para o Jogador 2
+
+        else:
+            # --- Turno do Jogador 2 ('O') ---
+            # Para este exemplo, Jogador 2 é um humano (ou você pode implementar uma IA aqui)
+            peca_atual = PECA_IA
+            simbolo_atual = SIMBOLO_IA
+            jogador_nome = "Jogador 2 (O)"
+
+            while True:
+                try:
+                    col = int(input(f"{jogador_nome}, escolha uma coluna para jogar (1-{COLUNAS}): ")) - 1
+                    
+                    if coluna_valida(tabuleiro, col):
+                        linha = proxima_linha_aberta(tabuleiro, col)
+                        soltar_peca(tabuleiro, linha, col, peca_atual)
+                        break
+                    else:
+                        print("Coluna inválida ou cheia. Tente novamente.")
+                except ValueError:
+                    print("Entrada inválida. Digite um número de coluna.")
+                except IndexError:
+                    print(f"Número de coluna fora do intervalo (1-{COLUNAS}).")
+
+
+            # --- Checagem após a jogada ---
+            if checar_vitoria(tabuleiro, peca_atual):
+                imprimir_tabuleiro(tabuleiro)
+                print(f"🎉 **{jogador_nome} VENCEU!** 🎉")
+                jogo_ativo = False
+
+            elif tabuleiro_cheio(tabuleiro):
+                imprimir_tabuleiro(tabuleiro)
+                print("🤝 **O jogo terminou em EMPATE!** 🤝")
+                jogo_ativo = False
+                
+            else:
+                imprimir_tabuleiro(tabuleiro)
+                turno = 0 # Passa para o Jogador 1
+
+# Garante que o NumPy esteja instalado: `pip install numpy`
+if __name__ == "__main__":
+    try:
+        jogar()
+    except ImportError:
+        print("\n--- ERRO ---")
+        print("A biblioteca 'numpy' é necessária para este código.")
+        print("Por favor, instale-a usando: **pip install numpy**")
+        print("------------")
